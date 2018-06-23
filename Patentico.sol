@@ -91,7 +91,7 @@ contract BasicToken is ERC20Basic, ShortAddressProtection {
         // SafeMath.sub will throw if there is not enough balance.
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -130,7 +130,7 @@ contract StandardToken is ERC20, BasicToken {
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 
@@ -146,7 +146,7 @@ contract StandardToken is ERC20, BasicToken {
      */
     function approve(address _spender, uint256 _value) onlyPayloadSize(2) public returns (bool) {
         allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -172,7 +172,7 @@ contract StandardToken is ERC20, BasicToken {
      */
     function increaseApproval(address _spender, uint _addedValue) onlyPayloadSize(2) public returns (bool) {
         allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -193,7 +193,7 @@ contract StandardToken is ERC20, BasicToken {
         } else {
             allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
         }
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -208,7 +208,7 @@ contract Ownable {
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
      * account.
      */
-    function Ownable() public {
+    constructor() public {
         owner = msg.sender;
     }
 
@@ -226,7 +226,7 @@ contract Ownable {
      */
     function transferOwnership(address newOwner) public onlyOwner {
         require(newOwner != address(0));
-        OwnershipTransferred(owner, newOwner);
+        emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
 }
@@ -275,8 +275,8 @@ contract MintableToken is StandardToken, Ownable {
         totalSupply = totalSupply.add(_amount);
         require(totalSupply <= mintLimit);
         balances[_to] = balances[_to].add(_amount);
-        Mint(_to, _amount);
-        Transfer(address(0), _to, _amount);
+        emit Mint(_to, _amount);
+        emit Transfer(address(0), _to, _amount);
         return true;
     }
 
@@ -286,7 +286,7 @@ contract MintableToken is StandardToken, Ownable {
      */
     function finishMinting() onlyOwner canMint public returns (bool) {
         mintingFinished = true;
-        MintFinished();
+        emit MintFinished();
         return true;
     }
 }
@@ -296,7 +296,7 @@ contract Token is MintableToken {
     string public constant symbol = "PTO";
     uint8 public constant decimals = 6;
 
-    function Token() public {
+    constructor() public {
         mintLimit = 100000000 * (10 ** 6);
     }
 }
@@ -331,7 +331,7 @@ contract PatenticoPreICO is Ownable {
     /**
      * PatenticoPreICO constructor
      */
-    function PatenticoPreICO(address _wallet, address _token) public {
+    constructor(address _wallet, address _token) public {
         require(_wallet != address(0));
         require(_token != address(0));
         wallet = _wallet;
@@ -368,7 +368,7 @@ contract PatenticoPreICO is Ownable {
         require(token.mint(beneficiary, tokens));
         tokenRaised = tokenRaised.add(tokens);
         require(tokenRaised <= hardCap);
-        TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+        emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
         weiRaised = weiRaised.add(weiAmount);
         forwardFunds();
     }
